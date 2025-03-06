@@ -49,10 +49,8 @@ Bu Python scripti, TeamSpeak 3 sunucunuzda belirli şehirler için iftar ve sahu
 4.  **Scripti Çalıştırın:**
 
     ```bash
-    python dosya_adi.py
+    python ts3Iftar.py
     ```
-
-    `dosya_adi.py` kısmını, scriptin dosya adıyla değiştirin.
 
 ## İşleyiş
 
