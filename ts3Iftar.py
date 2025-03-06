@@ -34,57 +34,50 @@ def check_city_id(CityName):
     return None
 
 def check_iftar_and_sahur(city_id):
-    today = datetime.today()
-    tarih = today.strftime('%Y-%m-%d')
-    guncel_saat = datetime.now().strftime('%H:%M')
-
-    response = requests.get(f'https://vakit.vercel.app/api/timesForPlace?id={city_id}&date={tarih}&days=1&timezoneOffset=180&calculationMethod=Turkey')
+    # Şu anki TAM TARİH ve SAAT (timezone-aware olmalı, API ile aynı olmalı)
+    current_datetime = datetime.now()
+    
+    # Bugünün tarihini al
+    today_date = current_datetime.strftime('%Y-%m-%d')
+    
+    # Bugünün vakitlerini çek
+    response = requests.get(f'https://vakit.vercel.app/api/timesForPlace?id={city_id}&date={today_date}&days=1&timezoneOffset=180&calculationMethod=Turkey')
     data = response.json()
-
-    times = data["times"]
-    prayer_times = list(times.values())[0]
-    iftar_saati = prayer_times[4]  # İftar saati
-    sahur_saati = prayer_times[0]  # Sahur saati
-
-    zaman1 = datetime.strptime(guncel_saat, "%H:%M")
-    zaman2_iftar = datetime.strptime(iftar_saati, "%H:%M")
-    fark_iftar = zaman2_iftar - zaman1
-
-    if fark_iftar.total_seconds() < 0:
-        # İftar geçmiş, sıradaki günü al
-        tomorrow = today + timedelta(days=1)
-        tarih = tomorrow.strftime('%Y-%m-%d')
-        response = requests.get(f'https://vakit.vercel.app/api/timesForPlace?id={city_id}&date={tarih}&days=1&timezoneOffset=180&calculationMethod=Turkey')
+    
+    # Bugünün iftar ve sahur saatleri (TARİH ile birlikte)
+    bugun_times = list(data["times"].values())[0]
+    iftar_bugun = datetime.strptime(f"{today_date} {bugun_times[4]}", "%Y-%m-%d %H:%M")
+    sahur_bugun = datetime.strptime(f"{today_date} {bugun_times[0]}", "%Y-%m-%d %H:%M")
+    
+    # İftar kontrolü
+    if current_datetime < iftar_bugun:
+        iftar_zamani = iftar_bugun
+    else:
+        # Yarının iftarını çek
+        yarin_date = (current_datetime + timedelta(days=1)).strftime('%Y-%m-%d')
+        response = requests.get(f'https://vakit.vercel.app/api/timesForPlace?id={city_id}&date={yarin_date}&days=1&timezoneOffset=180&calculationMethod=Turkey')
         data = response.json()
-        prayer_times = list(data["times"].values())[0]
-        iftar_saati = prayer_times[4]
-        sahur_saati = prayer_times[0]
-        zaman2_iftar = datetime.strptime(iftar_saati, "%H:%M")
-        fark_iftar = zaman2_iftar - zaman1
-
-    fark_dakika_iftar = int(fark_iftar.total_seconds() // 60)
-    saat_iftar = fark_dakika_iftar // 60
-    dakika_iftar = fark_dakika_iftar % 60
-
-    # Sahura kalan süre hesaplama
-    zaman2_sahur = datetime.strptime(sahur_saati, "%H:%M")
-    fark_sahur = zaman2_sahur - zaman1
-
-    if fark_sahur.total_seconds() < 0:
-        # Sahur geçmiş, sıradaki günü al
-        tomorrow = today + timedelta(days=1)
-        tarih = tomorrow.strftime('%Y-%m-%d')
-        response = requests.get(f'https://vakit.vercel.app/api/timesForPlace?id={city_id}&date={tarih}&days=1&timezoneOffset=180&calculationMethod=Turkey')
-        data = response.json()
-        prayer_times = list(data["times"].values())[0]
-        sahur_saati = prayer_times[0]
-        zaman2_sahur = datetime.strptime(sahur_saati, "%H:%M")
-        fark_sahur = zaman2_sahur - zaman1
-
-    fark_dakika_sahur = int(fark_sahur.total_seconds() // 60)
-    saat_sahur = fark_dakika_sahur // 60
-    dakika_sahur = fark_dakika_sahur % 60
-
+        yarin_times = list(data["times"].values())[0]
+        iftar_zamani = datetime.strptime(f"{yarin_date} {yarin_times[4]}", "%Y-%m-%d %H:%M")
+    
+    # Sahur kontrolü (DİKKAT: Yarının sahuru bugünün gecesine ait!)
+    yarin_date = (current_datetime + timedelta(days=1)).strftime('%Y-%m-%d')
+    response = requests.get(f'https://vakit.vercel.app/api/timesForPlace?id={city_id}&date={yarin_date}&days=1&timezoneOffset=180&calculationMethod=Turkey')
+    data = response.json()
+    yarin_times = list(data["times"].values())[0]
+    sahur_yarin = datetime.strptime(f"{yarin_date} {yarin_times[0]}", "%Y-%m-%d %H:%M")
+    
+    # Süre hesaplamaları
+    fark_iftar = iftar_zamani - current_datetime
+    fark_sahur = sahur_yarin - current_datetime
+    
+    # Formatlama
+    saat_iftar = fark_iftar.seconds // 3600
+    dakika_iftar = (fark_iftar.seconds % 3600) // 60
+    
+    saat_sahur = fark_sahur.seconds // 3600
+    dakika_sahur = (fark_sahur.seconds % 3600) // 60
+    
     return f"{saat_iftar} saat {dakika_iftar} dakika", f"{saat_sahur} saat {dakika_sahur} dakika"
 
 @bot.on("connect")
