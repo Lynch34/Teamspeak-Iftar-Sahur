@@ -64,7 +64,7 @@ Bu Python scripti, TeamSpeak 3 sunucunuzda belirli şehirler için iftar ve sahu
 
     Bot, belirtilen şehirler için iftar ve sahur saatlerini gösterecek kanallar oluşturur. Kanalların düzeni şöyledir:
 
-    <img src="https://i.hizliresim.com/t5x4eku.png" alt="Ts3Bot" />
+    ![ornek](https://github.com/user-attachments/assets/0cdb56bb-cf44-449a-8cd7-f593428cda38)
 
 3.  **Saat Güncelleme:**
 
