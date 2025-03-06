@@ -46,7 +46,7 @@ Bu Python scripti, TeamSpeak 3 sunucunuzda belirli şehirler için iftar ve sahu
     cities = ["Istanbul", "Ankara", "Izmir", "Bursa"]
     ```
 
-4.  **Betiği Çalıştırın:**
+4.  **Scripti Çalıştırın:**
 
     ```bash
     python dosya_adi.py
